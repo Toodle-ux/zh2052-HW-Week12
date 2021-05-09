@@ -8,6 +8,15 @@ using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
 {
+    // indicate the effect of each click, set default to 0
+    private int clickEffect = -1;
+
+    // the boxes of button UI
+    public Image crossSelected;
+    public Image singleSelected;
+    public Image lineSelected;
+    public Image bombSelected;
+
     // the size of the board
     public int width = 7;
     public int height = 7;
@@ -28,12 +37,18 @@ public class GameManager : MonoBehaviour
 
     // the level loader file
     public string levelFileName;
-    
-    public int currentLevel = 0;
-    
+
+    public int currentLevel = 1;
+
     // Start is called before the first frame update
     void Start()
     {
+        // disable all the button box UI by default
+        crossSelected.enabled = false;
+        singleSelected.enabled = false;
+        lineSelected.enabled = false;
+        bombSelected.enabled = false;
+        
         LoadLevel();
 
         display.text = "Light up all the stars.";
@@ -47,50 +62,49 @@ public class GameManager : MonoBehaviour
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
-        
+
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
-
-            // get the position of the cursor when click on the mouse
+            // get the position of the cursor when clicking on the mouse
             Vector3 worldPoint = Camera.main.ScreenToWorldPoint(Input.mousePosition, Camera.MonoOrStereoscopicEye.Mono);
 
             // round the position of the cursor into integers
             int gridX = Convert.ToInt32(Math.Round(worldPoint.x)) + Convert.ToInt32(offsetX);
             int gridY = Convert.ToInt32(Math.Round(worldPoint.y)) + Convert.ToInt32(offsetY);
 
+            Debug.Log(clickEffect);
+            
             // if the position is on the chess board and there is no chess piece in the grid
             if (gridX >= 0 && gridX < 7 && gridY >= 0 && gridY < 7 && grid[gridX, gridY] != 0 && !Win())
             {
-                Debug.Log(gridX + ", " + gridY);
+                //Debug.Log(gridX + ", " + gridY);
 
-                grid[gridX, gridY] = -grid[gridX, gridY];
+                switch (clickEffect)
+                {
+                    case 0:
+                        Cross(gridX, gridY);
+                        break;
+                    case 1:
+                        Single(gridX, gridY);
+                        break;
+                    case 2:
+                        Line(gridX, gridY);
+                        break;
+                    case 3:
+                        Bomb(gridX,gridY);
+                        break;
+                    default:
+                        break;
+                }
                 
-                // if there is any grid on the left, change that grid
-                if (gridX > 0)
-                {
-                    grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
-                }
-
-                if (gridX < 6)
-                {
-                    grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
-                }
-
-                if (gridY > 0)
-                {
-                    grid[gridX, gridY - 1] = -grid[gridX, gridY - 1];
-                }
-
-                if (gridY < 6)
-                {
-                    grid[gridX, gridY + 1] = -grid[gridX, gridY + 1];
-                }
+                
             }
         }
-        
+
         UpdateDisplay();
     }
 
+    // check if there is a dark star
     public bool ContainsDark(int x, int y)
     {
         return grid[x, y] == -1;
@@ -103,21 +117,25 @@ public class GameManager : MonoBehaviour
 
     private void UpdateDisplay()
     {
+        //destroy all the existing stars
         foreach (var star in spawnedStars)
         {
             Destroy(star);
         }
 
+        // clear the array of the stars
         spawnedStars.Clear();
 
         for (int x = 0; x < width; x++)
         {
             for (int y = 0; y < height; y++)
             {
+                //if there is a dark star, display a dark star
                 if (ContainsDark(x, y))
                 {
                     var darkStar = Instantiate(darkPrefab);
                     darkStar.transform.position = new Vector3(x - offsetX, y - offsetY);
+                    //add it to the array
                     spawnedStars.Add(darkStar);
                 }
 
@@ -133,6 +151,16 @@ public class GameManager : MonoBehaviour
         if (Win())
         {
             display.text = "The sky becomes bright again.";
+            currentLevel++;
+
+            //Move to next level
+            SceneManager.LoadScene(currentLevel);
+
+            //if this is the first time that the player has been to this scene, unlock it by saving the data in playerprefs
+            if (currentLevel > PlayerPrefs.GetInt("levelAt"))
+            {
+                PlayerPrefs.SetInt("levelAt", currentLevel);
+            }
         }
     }
 
@@ -161,41 +189,138 @@ public class GameManager : MonoBehaviour
         //initialize the board
         grid = new int[width, height];
 
+        int sceneIndex = SceneManager.GetActiveScene().buildIndex;
         
-
+        // find file path of the level document
         string current_file_path = Application.dataPath +
                                    "/Levels/" +
                                    levelFileName.Replace("Num",
-                                       currentLevel + "");
+                                       sceneIndex + "");
 
         string[] fileLines = File.ReadAllLines(current_file_path);
 
         for (int y = 0; y < height; y++)
         {
+            // read the file line by line, then character by character
             string lineText = fileLines[y];
 
             char[] characters = lineText.ToCharArray();
-            
+
+            // turn each character into the star
             for (int x = 0; x < width; x++)
             {
                 char c = characters[x];
 
                 switch (c)
                 {
-                    case'b':
+                    case 'b':
                         grid[x, y] = 1;
                         break;
-                    case'd':
+                    case 'd':
                         grid[x, y] = -1;
                         break;
                     default:
                         grid[x, y] = 0;
                         break;
                 }
-                
-                
             }
         }
+    }
 
+    // when the cross effect is selected, light up stars accordingly
+    void Cross(int gridX, int gridY)
+    {
+        grid[gridX, gridY] = -grid[gridX, gridY];
+
+        // if there is any grid on the surrounding, change that grid to the opposite color
+        if (gridX > 0)
+        {
+            grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
+        }
+
+        if (gridX < 6)
+        {
+            grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
+        }
+
+        if (gridY > 0)
+        {
+            grid[gridX, gridY - 1] = -grid[gridX, gridY - 1];
+        }
+
+        if (gridY < 6)
+        {
+            grid[gridX, gridY + 1] = -grid[gridX, gridY + 1];
+        }
+    }
+
+    // when single effect is selected
+    void Single(int gridX, int gridY)
+    {
+        grid[gridX, gridY] = -grid[gridX, gridY];
+    }
+
+    // when line effect is selected
+    void Line(int gridX, int gridY)
+    {
+        grid[gridX, gridY] = -grid[gridX, gridY];
+        
+        if (gridX > 0)
+        {
+            grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
+        }
+
+        if (gridX < 6)
+        {
+            grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
+        }
+    }
+    
+    // when bomb effect is selected
+    void Bomb(int gridX, int gridY)
+    {
+        // that star disappears
+        grid[gridX, gridY] = 0;
+    }
+
+    public void ClickButton(int clickNum)
+    {
+        clickEffect = clickNum;
+        
+        // display the selected UI accordingly
+        ClickDisplay(clickNum);
+    }
+
+    void ClickDisplay(int clickNum)
+    {
+        switch (clickNum)
+        {
+            case 0:
+                crossSelected.enabled = true;
+                singleSelected.enabled = false;
+                lineSelected.enabled = false;
+                bombSelected.enabled = false;
+                break;
+            case 1:
+                crossSelected.enabled = false;
+                singleSelected.enabled = true;
+                lineSelected.enabled = false;
+                bombSelected.enabled = false;
+                break;
+            case 2:
+                crossSelected.enabled = false;
+                singleSelected.enabled = false;
+                lineSelected.enabled = true;
+                bombSelected.enabled = false;
+                break;
+            case 3:
+                crossSelected.enabled = false;
+                singleSelected.enabled = false;
+                lineSelected.enabled = false;
+                bombSelected.enabled = true;
+                break;
+            default:
+                break;
+        }
     }
 }
