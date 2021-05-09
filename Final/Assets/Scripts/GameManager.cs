@@ -17,6 +17,24 @@ public class GameManager : MonoBehaviour
     public Image lineSelected;
     public Image bombSelected;
 
+    // buttons
+    public Button crossButton;
+    public Button singleButton;
+    public Button lineButton;
+    public Button bombButton;
+
+    // the remained steps for each click effect
+    public int crossRemain;
+    public int singleRemain;
+    public int lineRemain;
+    public int bombRemain;
+    
+    // the display text of the remained clicks
+    public Text crossText;
+    public Text singleText;
+    public Text lineText;
+    public Text bombText;
+    
     // the size of the board
     public int width = 7;
     public int height = 7;
@@ -38,7 +56,7 @@ public class GameManager : MonoBehaviour
     // the level loader file
     public string levelFileName;
 
-    public int currentLevel = 1;
+    //public int currentLevel = 1;
 
     // Start is called before the first frame update
     void Start()
@@ -62,6 +80,33 @@ public class GameManager : MonoBehaviour
         {
             SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
         }
+        
+        // disable the button when the remain step is 0
+        if (crossRemain == 0)
+        {
+            crossButton.interactable = false;
+        }
+
+        if (singleRemain == 0)
+        {
+            singleButton.interactable = false;
+        }
+
+        if (lineRemain == 0)
+        {
+            lineButton.interactable = false;
+        }
+
+        if (bombRemain == 0)
+        {
+            bombButton.interactable = false;
+        }
+        
+        // update the remained steps display
+        crossText.text = "Remained:\n" + crossRemain;
+        singleText.text = "Remained:\n" + singleRemain;
+        lineText.text = "Remained:\n" + lineRemain;
+        bombText.text = "Remained:\n" + bombRemain;
 
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -72,7 +117,7 @@ public class GameManager : MonoBehaviour
             int gridX = Convert.ToInt32(Math.Round(worldPoint.x)) + Convert.ToInt32(offsetX);
             int gridY = Convert.ToInt32(Math.Round(worldPoint.y)) + Convert.ToInt32(offsetY);
 
-            Debug.Log(clickEffect);
+            //Debug.Log(clickEffect);
             
             // if the position is on the chess board and there is no chess piece in the grid
             if (gridX >= 0 && gridX < 7 && gridY >= 0 && gridY < 7 && grid[gridX, gridY] != 0 && !Win())
@@ -150,16 +195,25 @@ public class GameManager : MonoBehaviour
 
         if (Win())
         {
-            display.text = "The sky becomes bright again.";
-            currentLevel++;
+            int sceneIndex = SceneManager.GetActiveScene().buildIndex;
 
-            //Move to next level
-            SceneManager.LoadScene(currentLevel);
+            //Move to main menu
+            SceneManager.LoadScene(0);
 
-            //if this is the first time that the player has been to this scene, unlock it by saving the data in playerprefs
-            if (currentLevel > PlayerPrefs.GetInt("levelAt"))
+            // unlock the difficult levels by saving data in playerprefs
+            switch (sceneIndex)
             {
-                PlayerPrefs.SetInt("levelAt", currentLevel);
+                case 1:
+                    PlayerPrefs.SetInt("level4", 1);
+                    break;
+                case 2:
+                    PlayerPrefs.SetInt("level5", 1);
+                    break;
+                case 3:
+                    PlayerPrefs.SetInt("level6", 1);
+                    break;
+                default:
+                    break;
             }
         }
     }
@@ -190,6 +244,12 @@ public class GameManager : MonoBehaviour
         grid = new int[width, height];
 
         int sceneIndex = SceneManager.GetActiveScene().buildIndex;
+
+        // since the difficult and easy levels use the same map, load the simple level map
+        if (sceneIndex > 3)
+        {
+            sceneIndex = sceneIndex - 3;
+        }
         
         // find file path of the level document
         string current_file_path = Application.dataPath +
@@ -230,57 +290,80 @@ public class GameManager : MonoBehaviour
     // when the cross effect is selected, light up stars accordingly
     void Cross(int gridX, int gridY)
     {
-        grid[gridX, gridY] = -grid[gridX, gridY];
-
-        // if there is any grid on the surrounding, change that grid to the opposite color
-        if (gridX > 0)
+        // execute the click only when there are remained steps
+        if (crossRemain > 0)
         {
-            grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
-        }
+            grid[gridX, gridY] = -grid[gridX, gridY];
 
-        if (gridX < 6)
-        {
-            grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
-        }
+            // if there is any grid on the surrounding, change that grid to the opposite color
+            if (gridX > 0)
+            {
+                grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
+            }
 
-        if (gridY > 0)
-        {
-            grid[gridX, gridY - 1] = -grid[gridX, gridY - 1];
-        }
+            if (gridX < 6)
+            {
+                grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
+            }
 
-        if (gridY < 6)
-        {
-            grid[gridX, gridY + 1] = -grid[gridX, gridY + 1];
+            if (gridY > 0)
+            {
+                grid[gridX, gridY - 1] = -grid[gridX, gridY - 1];
+            }
+
+            if (gridY < 6)
+            {
+                grid[gridX, gridY + 1] = -grid[gridX, gridY + 1];
+            }
+
+            // remained steps -1
+            crossRemain--;
         }
     }
 
     // when single effect is selected
     void Single(int gridX, int gridY)
     {
-        grid[gridX, gridY] = -grid[gridX, gridY];
+        if (singleRemain > 0)
+        {
+            grid[gridX, gridY] = -grid[gridX, gridY];
+
+            singleRemain--;
+        }
     }
 
     // when line effect is selected
     void Line(int gridX, int gridY)
     {
-        grid[gridX, gridY] = -grid[gridX, gridY];
+        if (lineRemain > 0)
+        {
+            grid[gridX, gridY] = -grid[gridX, gridY];
         
-        if (gridX > 0)
-        {
-            grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
-        }
+            if (gridX > 0)
+            {
+                grid[gridX - 1, gridY] = -grid[gridX - 1, gridY];
+            }
 
-        if (gridX < 6)
-        {
-            grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
+            if (gridX < 6)
+            {
+                grid[gridX + 1, gridY] = -grid[gridX + 1, gridY];
+            }
+
+            lineRemain--;
         }
     }
     
     // when bomb effect is selected
     void Bomb(int gridX, int gridY)
     {
-        // that star disappears
-        grid[gridX, gridY] = 0;
+        if (bombRemain > 0)
+        {
+            // that star disappears
+            grid[gridX, gridY] = 0;
+
+            // remained steps for bombs -1
+            bombRemain--;
+        }
     }
 
     public void ClickButton(int clickNum)

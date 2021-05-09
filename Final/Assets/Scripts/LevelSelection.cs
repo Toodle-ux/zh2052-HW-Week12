@@ -10,14 +10,23 @@ public class LevelSelection : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        int levelAt = PlayerPrefs.GetInt("levelAt", 1);
+        int level4 = PlayerPrefs.GetInt("level4", 0);
+        int level5 = PlayerPrefs.GetInt("level5", 0);
+        int level6 = PlayerPrefs.GetInt("level6", 0);
 
-        for (int i = 0; i < levelButtons.Length; i++)
+        if (level4 == 0)
         {
-            if (i + 1 > levelAt)
-            {
-                levelButtons[i].interactable = false;
-            }
+            levelButtons[3].interactable = false;
+        }
+        
+        if (level5 == 0)
+        {
+            levelButtons[4].interactable = false;
+        }
+        
+        if (level6 == 0)
+        {
+            levelButtons[5].interactable = false;
         }
     }
 }
