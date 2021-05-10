@@ -1110,10 +1110,10 @@ MonoBehaviour:
   singleButton: {fileID: 246447859}
   lineButton: {fileID: 2055196199}
   bombButton: {fileID: 108174292}
-  crossRemain: 1
-  singleRemain: 4
-  lineRemain: 0
-  bombRemain: 0
+  crossRemain: 2
+  singleRemain: 0
+  lineRemain: 2
+  bombRemain: 1
   crossText: {fileID: 1262721937}
   singleText: {fileID: 54853436}
   lineText: {fileID: 1383560435}

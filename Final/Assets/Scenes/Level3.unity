@@ -1747,7 +1747,7 @@ MonoBehaviour:
   crossRemain: 1
   singleRemain: 4
   lineRemain: 2
-  bombRemain: 0
+  bombRemain: 4
   crossText: {fileID: 1598516643}
   singleText: {fileID: 406650369}
   lineText: {fileID: 323387263}

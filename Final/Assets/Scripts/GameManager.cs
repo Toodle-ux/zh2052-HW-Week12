@@ -56,8 +56,6 @@ public class GameManager : MonoBehaviour
     // the level loader file
     public string levelFileName;
 
-    //public int currentLevel = 1;
-
     // Start is called before the first frame update
     void Start()
     {

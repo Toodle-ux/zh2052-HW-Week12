@@ -773,8 +773,8 @@ MonoBehaviour:
   singleButton: {fileID: 1951306360}
   lineButton: {fileID: 1362294138}
   bombButton: {fileID: 2053679644}
-  crossRemain: 1
-  singleRemain: 4
+  crossRemain: 11
+  singleRemain: 0
   lineRemain: 0
   bombRemain: 0
   crossText: {fileID: 1516240785}
